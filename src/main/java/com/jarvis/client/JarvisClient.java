@@ -5,17 +5,20 @@ import com.jarvis.voice.VoiceMemory;
 import com.jarvis.voice.VoicePipeline;
 import com.jarvis.voice.VoiceProfile;
 import com.jarvis.world.OreHit;
+import com.mojang.logging.LogUtils;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
+import org.slf4j.Logger;
 
 /**
  * Client entrypoint: registers highlight rendering and hosts the local voice
  * pipeline (synthesizes Jarvis speech PCM on the client and plays it).
  */
 public final class JarvisClient {
+    private static final Logger LOG = LogUtils.getLogger();
     private static volatile VoicePipeline voice;
     private static volatile java.util.concurrent.ExecutorService voiceThreads;
     private static final JarvisHudState HUD_STATE = new JarvisHudState();
@@ -65,12 +68,18 @@ public final class JarvisClient {
             HUD_STATE.pulse(millis, System.currentTimeMillis());
         } catch (Exception ignored) {}
         voiceThreads.submit(() -> {
+            long start = System.nanoTime();
             try {
                 var spoken = pipeline().speak(trimForSpeech(text));
+                long synthMs = (System.nanoTime() - start) / 1_000_000L;
+                LOG.debug("[Jarvis] Synthesized {} samples in {}ms", spoken.pcm().length, synthMs);
                 if (!Minecraft.getInstance().isPaused()) {
                     AudioRenderer.play(spoken.pcm());
+                    LOG.debug("[Jarvis] Played voice line ({} chars)", trimForSpeech(text).length());
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                LOG.warn("[Jarvis] Voice playback failed (synth/play): {}", String.valueOf(e));
+            }
         });
     }
 

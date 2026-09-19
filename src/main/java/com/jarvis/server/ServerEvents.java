@@ -116,6 +116,14 @@ public final class ServerEvents {
                 } catch (Exception ignored) {}
             });
         });
+        // sustained speech with no transcription available: answer honestly
+        // instead of silence (wired per instance at creation below)
+        svc.setSpeechNotice((uuid, streak) -> {
+            sendChat(uuid, "I can hear you speaking, sir, but my speech recognition "
+                + "is still in training and I cannot make out words yet. "
+                + "Please type your request after \"Jarvis,\" and I will act at once.");
+            LOG.info("[Jarvis] Speech noticed without transcription; sent guidance nudge.");
+        });
     }
 
     private static void startAutosave() {
@@ -188,8 +196,12 @@ public final class ServerEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         try {
             JarvisInstance inst = svc.getOrCreate(player.getUUID(), player.getGameProfile().getName());
-            boolean svcPresent = ModList.get().isLoaded("voicechat");
-            sendChat(player.getUUID(), "Jarvis online" + (svcPresent ? ", voice link active" : "")
+            boolean svcInstalled = ModList.get().isLoaded("voicechat");
+            boolean linkActive = com.jarvis.voice.svc.VoiceIntegration.available();
+            String voiceNote = svcInstalled
+                ? (linkActive ? ", voice link active" : ", voice chat installed (link starting)")
+                : "";
+            sendChat(player.getUUID(), "Jarvis online" + voiceNote
                 + ". Say \"Jarvis\" followed by your request, " + inst.profile().personality().address() + ".");
         } catch (Exception e) {
             LOG.error("[Jarvis] login init failed", e);

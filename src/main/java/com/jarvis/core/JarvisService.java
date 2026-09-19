@@ -53,6 +53,7 @@ public final class JarvisService {
     private final ModDiscovery discovery;
     private final RegistryView registryView;
     private final com.jarvis.persistence.PersistenceManager persistence;
+    private volatile BiConsumer<UUID, Integer> speechNotice = (id, streak) -> {};
 
     private JarvisService(Wiring wiring, Supplier<List<ModInfo>> modSupplier, RegistryView registryView) {
         this.wiring = wiring;
@@ -88,6 +89,11 @@ public final class JarvisService {
         return instances.computeIfAbsent(playerId, id -> {
             JarvisProfile profile = new JarvisProfile(id, playerName);
             JarvisInstance inst = new JarvisInstance(profile, wiring, wiring.settings());
+            inst.reception().setSpeechNoticedHook((uuid, streak) -> {
+                try {
+                    speechNotice.accept(uuid, streak);
+                } catch (Exception ignored) {}
+            });
             try {
                 persistence.load(inst);
             } catch (Exception ignored) {}
@@ -186,6 +192,11 @@ public final class JarvisService {
 
     public void registerIntegration(IModIntegration integration) {
         wiring.integrations().add(integration);
+    }
+
+    /** Hook fired when sustained mic speech arrives with no transcription. */
+    public void setSpeechNotice(BiConsumer<UUID, Integer> hook) {
+        this.speechNotice = hook;
     }
 
     public Supplier<JarvisSettings> settings() {

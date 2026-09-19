@@ -2,12 +2,29 @@
 
 Modular pipeline: `VoiceModel` (profile) → `PhonemeProcessor` (dictionary +
 rule fallback, sentence boundaries) → `ProsodyEngine` (pitch/timing/volume,
-emotion states) → `SpeechSynthesizer` (formant PCM @22050 Hz) →
-`AudioRenderer` (client playback) + `VoiceMemory`/`VoiceProfile`.
+emotion states) → `SpeechSynthesizer` (formant PCM @22050 Hz, peak-normalized
+for audibility) → `AudioRenderer` (client playback) + `VoiceMemory`/`VoiceProfile`.
 
 Default voice: measured cadence, ~112 Hz base, falling declaratives —
 a refined British-inspired assistant character (original, no impersonation).
 Configurable: rate, pitch, volume, timbre seed (`/jarvis voice ...`).
+
+## Talking (output)
+
+Every Jarvis reply is sent as a SpeechPayload; the client synthesizes PCM
+locally and plays it. Diagnose with the log: server logs payload sends,
+client logs receipt/synth/playback (debug) and playback failures (warn).
+If you see text but hear nothing, check those lines first — usually the
+system mixer or an exclusive-mode device.
+
+## Hearing (input)
+
+Microphone packets arrive via the SVC plugin into `VoiceReception`
+(energy VAD + prosodic features). Sustained speech with no transcription
+produces one honest in-chat nudge per 45s — never silence — directing the
+player to type the request. A real transcription provider can be injected at
+runtime with `JarvisAPI.setTranscriber(playerId, provider)`; once set, spoken
+words flow through the normal dialogue pipeline.
 
 ## Transport
 

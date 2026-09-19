@@ -70,4 +70,18 @@ public final class JarvisAPI {
     public static String createSkill(UUID playerId, String description) {
         return get(playerId).map(j -> j.requestSkill(description)).orElse("Jarvis is not available.");
     }
+
+    /**
+     * Plug in a real speech-to-text provider for a player (e.g. an-approved
+     * server-side transcription bridge). Once set, sustained microphone speech
+     * flows through the normal dialogue pipeline. The default provider hears
+     * speech presence only and yields no words.
+     */
+    public static boolean setTranscriber(UUID playerId,
+                                         com.jarvis.voice.VoiceReception.TranscriptionProvider provider) {
+        return get(playerId).map(j -> {
+            j.reception().setTranscriber(provider);
+            return true;
+        }).orElse(false);
+    }
 }

@@ -30,6 +30,12 @@ public final class VoiceReception {
     private final int cap;
     private TranscriptionProvider transcriber = (id, hint) -> "";
     private BiConsumer<UUID, String> transcriptHook = (id, text) -> {};
+    private BiConsumer<UUID, Integer> speechNoticedHook = (id, streak) -> {};
+    private final java.util.Map<UUID, Long> lastNotice = new java.util.HashMap<>();
+    // NOTE: pure core must stay free of Minecraft classes (unit tests run
+    // without the game), so diagnostics here use plain JUL.
+    private static final java.util.logging.Logger LOG =
+        java.util.logging.Logger.getLogger("jarvis");
     private long packets;
     private long speechPackets;
 
@@ -49,39 +55,59 @@ public final class VoiceReception {
         this.transcriptHook = hook;
     }
 
-    /** Feed one voice packet (opus bytes used as an energy proxy). */
+    /**
+     * Fires when sustained speech is noticed but no transcription is available,
+     * so the player gets an honest answer instead of silence. At most once per
+     * player per cooldown window.
+     */
+    public void setSpeechNoticedHook(BiConsumer<UUID, Integer> hook) {
+        this.speechNoticedHook = hook;
+    }
+
+    /** Feed one voice packet. Opus frame LENGTH is the energy signal: speech
+     * frames carry full-bitrate audio while silence frames shrink to a few
+     * bytes (byte values of compressed audio carry no amplitude, so they are
+     * ignored). The noise floor tracks silence only and never chases speech;
+     * a hangover counter tolerates syllable gaps. */
     public synchronized VoiceEvent feed(UUID playerId, byte[] opusData, boolean whispering) {
         packets++;
-        float energy = energyProxy(opusData);
+        float energy = opusData == null ? 0f : opusData.length;
         float floor = energyFloor.getOrDefault(playerId, 24f);
-        floor = floor * 0.95f + energy * 0.05f;
-        energyFloor.put(playerId, floor);
-        boolean speech = energy > floor * 1.8f && energy > 40f;
-        int streak = speechStreak.getOrDefault(playerId, 0);
-        streak = speech ? streak + 1 : 0;
+        boolean speech = energy > Math.max(48f, floor * 2.0f);
+        if (!speech) {
+            floor = floor * 0.95f + energy * 0.05f;
+            energyFloor.put(playerId, floor);
+        }
+        int before = speechStreak.getOrDefault(playerId, 0);
+        int streak = speech ? Math.min(1000, before + 1) : Math.max(0, before - 2);
         speechStreak.put(playerId, streak);
         if (speech) speechPackets++;
+        if (packets == 1) {
+            LOG.info("[Jarvis] Voice reception live: first microphone packet arrived.");
+        }
         String transcript = "";
-        // only attempt transcription on sustained speech to save budget
-        if (speech && streak == 12) {
+        // transcribe once per talk spurt as the streak crosses the threshold
+        if (before < 12 && streak >= 12) {
             transcript = transcriber.transcribe(playerId, opusData);
             if (!transcript.isBlank()) {
                 transcriptHook.accept(playerId, transcript);
+            }
+        }
+        // sustained speech with no transcription: notice honestly, with cooldown
+        if (before < 25 && streak >= 25 && transcript.isBlank()) {
+            long now = System.currentTimeMillis();
+            long last = lastNotice.getOrDefault(playerId, 0L);
+            if (now - last > 45_000L) {
+                lastNotice.put(playerId, now);
+                try {
+                    speechNoticedHook.accept(playerId, streak);
+                } catch (Exception ignored) {}
             }
         }
         VoiceEvent e = new VoiceEvent(playerId, System.currentTimeMillis(), speech, energy, transcript);
         events.addLast(e);
         while (events.size() > cap) events.pollFirst();
         return e;
-    }
-
-    private static float energyProxy(byte[] opus) {
-        if (opus == null || opus.length == 0) return 0f;
-        // Opus frame size correlates with signal energy; add byte variance term.
-        long var = 0;
-        for (byte b : opus) var += (b & 0xFF) * (b & 0xFF);
-        float rms = (float) Math.sqrt(var / (double) opus.length);
-        return opus.length * 0.5f + rms;
     }
 
     public synchronized List<VoiceEvent> recent() {

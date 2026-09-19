@@ -62,8 +62,13 @@ public final class JarvisPayloads {
 
     public static void sendSpeech(ServerPlayer player, String text) {
         try {
+            com.mojang.logging.LogUtils.getLogger().debug("[Jarvis] Sending speech payload to {} ({} chars)",
+                player.getGameProfile().getName(), text == null ? 0 : text.length());
             PacketDistributor.sendToPlayer(player, new JarvisPackets.SpeechPayload(text));
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            com.mojang.logging.LogUtils.getLogger().warn("[Jarvis] Failed to send speech payload: {}",
+                String.valueOf(e));
+        }
     }
 
     public static void sendOreHighlights(ServerPlayer player, List<OreHit> hits) {

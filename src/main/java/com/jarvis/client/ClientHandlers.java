@@ -9,9 +9,11 @@ import net.minecraft.client.Minecraft;
  * the client thread before touching Minecraft.
  */
 public final class ClientHandlers {
+    private static final org.slf4j.Logger LOG = com.mojang.logging.LogUtils.getLogger();
     private ClientHandlers() {}
 
     public static void onSpeech(String text) {
+        LOG.debug("[Jarvis] Speech payload received ({} chars)", text == null ? 0 : text.length());
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> JarvisClient.speakAsync(text));
     }

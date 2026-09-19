@@ -18,6 +18,9 @@ import java.util.UUID;
  */
 @ForgeVoicechatPlugin
 public final class JarvisVoicePlugin implements VoicechatPlugin {
+    private static final org.slf4j.Logger LOG = com.mojang.logging.LogUtils.getLogger();
+    private static volatile boolean loggedFirstMic;
+
     @Override
     public String getPluginId() {
         return "jarvis";
@@ -26,19 +29,26 @@ public final class JarvisVoicePlugin implements VoicechatPlugin {
     @Override
     public void initialize(VoicechatApi api) {
         VoiceIntegration.setApi(api);
+        LOG.info("[Jarvis] Simple Voice Chat handshake complete: microphone link active.");
     }
 
     @Override
     public void registerEvents(EventRegistration registration) {
+        LOG.info("[Jarvis] Registering Simple Voice Chat events.");
         registration.registerEvent(VoicechatServerStartedEvent.class, event -> {
             try {
                 VoiceIntegration.setApi(event.getVoicechat());
+                LOG.info("[Jarvis] Voice chat server started; Jarvis link active.");
             } catch (Exception ignored) {}
         });
         registration.registerEvent(MicrophonePacketEvent.class, event -> {
             try {
                 UUID sender = senderUuid(event);
                 if (sender == null) return;
+                if (!loggedFirstMic) {
+                    loggedFirstMic = true;
+                    LOG.info("[Jarvis] First microphone packet received from a player.");
+                }
                 byte[] opus = null;
                 boolean whispering = false;
                 try {

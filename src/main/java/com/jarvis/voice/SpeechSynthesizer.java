@@ -62,7 +62,23 @@ public final class SpeechSynthesizer {
                 pcm[idx] = (short) Math.max(-32768, Math.min(32767, (int) (sample * 32767)));
             }
         }
+        normalize(pcm);
         return pcm;
+    }
+
+    /** Peak-normalize so Jarvis is clearly audible next to game sounds. */
+    static void normalize(short[] pcm) {
+        int peak = 0;
+        for (short s : pcm) {
+            int a = Math.abs((int) s);
+            if (a > peak) peak = a;
+        }
+        if (peak < 1000) return; // silence stays silent
+        double gain = 29200.0 / peak;
+        for (int i = 0; i < pcm.length; i++) {
+            int v = (int) Math.round(pcm[i] * gain);
+            pcm[i] = (short) Math.max(-32768, Math.min(32767, v));
+        }
     }
 
     /** First three formant targets per phoneme (Hz). */
