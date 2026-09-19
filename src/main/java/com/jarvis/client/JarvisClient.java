@@ -9,8 +9,6 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 /**
@@ -79,10 +77,5 @@ public final class JarvisClient {
     private static String trimForSpeech(String text) {
         String t = text.replaceAll("^\\[Jarvis\\]\\s*", "");
         return t.length() > 400 ? t.substring(0, 400) : t;
-    }
-
-    @EventBusSubscriber(value = Dist.CLIENT)
-    public static final class Screens {
-        private Screens() {}
     }
 }
