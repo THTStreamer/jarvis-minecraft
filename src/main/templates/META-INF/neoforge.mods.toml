@@ -30,16 +30,20 @@ side="BOTH"
 
 # Simple Voice Chat is an OPTIONAL dependency. Jarvis works without it; voice
 # chat transport is enabled automatically when it is present.
+# NOTE: SVC versions its mod as "<minecraft>-<api>" (e.g. 1.21.1-2.6.22),
+# which can never satisfy a plain API floor like [2.5.0,). The integration only
+# uses long-stable plugin interfaces plus reflection-guarded calls, so any
+# 2.x release is fine; the minecraft constraint above already floors the pairing.
 [[dependencies.${mod_id}]]
 modId="voicechat"
 type="optional"
-versionRange="[2.5.0,)"
+versionRange="[1.0,)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="voicechat_api"
 type="optional"
-versionRange="[${voicechat_api_version},)"
+versionRange="[1.0,)"
 ordering="AFTER"
 side="BOTH"
