@@ -1,0 +1,45 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''
+Jarvis is a Minecraft-native personal AI companion. Each player gets their own
+learning Jarvis instance with its own neural language system, memory, skills,
+world model, mod knowledge and voice engine. No cloud AI, no external LLMs:
+all intelligence is implemented inside this mod and learns from Minecraft.
+'''
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+# Simple Voice Chat is an OPTIONAL dependency. Jarvis works without it; voice
+# chat transport is enabled automatically when it is present.
+[[dependencies.${mod_id}]]
+modId="voicechat"
+type="optional"
+versionRange="[2.5.0,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="voicechat_api"
+type="optional"
+versionRange="[${voicechat_api_version},)"
+ordering="AFTER"
+side="BOTH"

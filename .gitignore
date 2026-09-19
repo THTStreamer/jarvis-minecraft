@@ -1,0 +1,22 @@
+# Gradle caches and build outputs
+.gradle/
+build/
+run/
+run-data/
+repo/
+out/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Persisted per-player Jarvis data created at runtime (never commit)
+/jarvis/
