@@ -15,6 +15,7 @@ public final class JarvisSettings {
     public boolean modLearningEnabled = true;
     public boolean dynamicSkillsEnabled = true;
     public boolean jarvisToJarvisEnabled = true;
+    public boolean bootstrapEnabled = true;
     public boolean debugLogging = false;
 
     public String addressTitle = "SIR";

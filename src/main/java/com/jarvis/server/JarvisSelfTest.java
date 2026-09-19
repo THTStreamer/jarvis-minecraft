@@ -86,6 +86,18 @@ public final class JarvisSelfTest {
                         ? "PASS synth samples=" + spoken.pcm().length + " phonemes=" + spoken.phonemes()
                         : "FAIL synth");
                 }
+                case "bootstrap" -> {
+                    int corpus = com.jarvis.bootstrap.BootstrapCorpus.load().size();
+                    var hits = inst.knowledge().queryObject("diamond ore");
+                    out.add(corpus >= 150
+                        ? "PASS corpus facts=" + corpus : "FAIL corpus=" + corpus);
+                    out.add(!hits.isEmpty()
+                        ? "PASS diamond knowledge: " + hits.get(0).subject() + " " + hits.get(0).relation()
+                        : "FAIL no diamond knowledge (bootstrap pending?)");
+                    out.add("bootstrapped=" + inst.bootstrapped()
+                        + " facts=" + inst.knowledge().size()
+                        + " vocab=" + inst.tokenizer().vocabulary().size());
+                }
                 default -> out.add("Unknown suite. Try: tokenizer neural memory navigation mobs skills modlearning voice");
             }
         } catch (Exception e) {

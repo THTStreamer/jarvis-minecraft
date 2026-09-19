@@ -44,7 +44,9 @@ public final class JarvisCommands {
                     .executes(JarvisCommands::voice)))
             .then(Commands.literal("benchmark").executes(JarvisCommands::benchmark))
             .then(Commands.literal("ui").executes(JarvisCommands::ui))
-            .then(Commands.literal("hud").executes(JarvisCommands::hud))
+            .then(Commands.literal("hud")
+                .executes(JarvisCommands::hud)
+                .then(Commands.literal("preview").executes(JarvisCommands::hudPreview)))
             .then(Commands.literal("ask")
                 .then(Commands.argument("message", StringArgumentType.greedyString())
                     .executes(JarvisCommands::ask)))
@@ -64,7 +66,7 @@ public final class JarvisCommands {
                 .then(Commands.argument("suite", StringArgumentType.word())
                     .suggests((ctx, b) -> {
                         for (String s : List.of("tokenizer", "neural", "memory", "navigation",
-                                "mobs", "skills", "modlearning", "voice")) {
+                                "mobs", "skills", "modlearning", "voice", "bootstrap")) {
                             b.suggest(s);
                         }
                         return b.buildFuture();
@@ -336,6 +338,28 @@ public final class JarvisCommands {
         try {
             PlayerCtx pc = players(ctx);
             JarvisPayloads.sendUi(pc.player(), "hud");
+            return 1;
+        } catch (Exception e) {
+            reply(ctx, "[Jarvis] " + e.getMessage());
+            return 0;
+        }
+    }
+
+    /** Cycles purple -> red -> blue on demand to verify portrait rendering. */
+    private static int hudPreview(CommandContext<CommandSourceStack> ctx) {
+        try {
+            PlayerCtx pc = players(ctx);
+            var server = ctx.getSource().getServer();
+            JarvisPayloads.sendHud(pc.player(), "SKILL", 2200);
+            reply(ctx, "[Jarvis] Portrait preview: purple (learning), then red (failed), then blue (main).");
+            java.util.concurrent.CompletableFuture
+                .delayedExecutor(2, java.util.concurrent.TimeUnit.SECONDS)
+                .execute(() -> server.execute(() ->
+                    JarvisPayloads.sendHud(pc.player(), "FAILED", 2200)));
+            java.util.concurrent.CompletableFuture
+                .delayedExecutor(4, java.util.concurrent.TimeUnit.SECONDS)
+                .execute(() -> server.execute(() ->
+                    JarvisPayloads.sendHud(pc.player(), "MAIN", 1200)));
             return 1;
         } catch (Exception e) {
             reply(ctx, "[Jarvis] " + e.getMessage());

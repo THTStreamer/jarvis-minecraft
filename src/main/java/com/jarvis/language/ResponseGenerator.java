@@ -57,7 +57,7 @@ public final class ResponseGenerator {
             case VOICE_CONFIG -> "Voice configuration updated";
             case SKILL_CREATE -> skillCreateSummary(f);
             case SKILL_LIST -> skillListSummary(f);
-            case MEMORY_QUERY -> "Here's what I hold in memory";
+            case MEMORY_QUERY -> memoryQuerySummary(f);
             case KNOWLEDGE_QUERY -> knowledgeSummary(f);
             case CONFIRM -> "Confirmed";
             case DENY -> "Very well. Standing by";
@@ -149,6 +149,12 @@ public final class ResponseGenerator {
         Object target = f.get("target");
         if (target instanceof String t) return "Message relayed. I'll have " + t + "'s Jarvis pass it on";
         return "Message queued for delivery";
+    }
+
+    private String memoryQuerySummary(Map<String, Object> f) {
+        Object answer = f.get("answer");
+        if (answer instanceof String s && !s.isBlank()) return s;
+        return "Here's what I hold in memory";
     }
 
     private String skillCreateSummary(Map<String, Object> f) {

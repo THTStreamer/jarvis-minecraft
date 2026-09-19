@@ -6,7 +6,9 @@ Three files (plus per-world server overrides under
 ## jarvis-common.toml
 
 - `[ai]` — `enabled`, `learningEnabled`, `modLearningEnabled`,
-  `dynamicSkillsEnabled`, `jarvisToJarvis`, `debug`
+  `dynamicSkillsEnabled`, `jarvisToJarvis`, `bootstrapEnabled`
+  (pre-train new players on Minecraft + mod registries at first login),
+  `debug`
 - `[personality]` — `addressTitle` (SIR/MADAM/COMMANDER/BOSS/FRIEND/NONE),
   `verbosity`, `wit`, `formality` (0..1)
 - `[neural]` — `maxVocab` (512..8192), `dim`, `heads`, `blocks`, `ffnDim`,

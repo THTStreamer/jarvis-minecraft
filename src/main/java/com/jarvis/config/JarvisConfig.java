@@ -13,6 +13,7 @@ public final class JarvisConfig {
         public final ModConfigSpec.BooleanValue modLearningEnabled;
         public final ModConfigSpec.BooleanValue dynamicSkillsEnabled;
         public final ModConfigSpec.BooleanValue jarvisToJarvis;
+        public final ModConfigSpec.BooleanValue bootstrapEnabled;
         public final ModConfigSpec.BooleanValue debugLogging;
         public final ModConfigSpec.ConfigValue<String> addressTitle;
         public final ModConfigSpec.DoubleValue verbosity;
@@ -39,6 +40,8 @@ public final class JarvisConfig {
                 .define("dynamicSkillsEnabled", true);
             jarvisToJarvis = b.comment("Allow Jarvis-to-Jarvis messages between players.")
                 .define("jarvisToJarvis", true);
+            bootstrapEnabled = b.comment("Pre-train each new Jarvis on Minecraft knowledge and installed mod registries at first login.")
+                .define("bootstrapEnabled", true);
             debugLogging = b.comment("Verbose AI debug logging.").define("debug", false);
             b.pop();
             b.push("personality");
@@ -130,6 +133,7 @@ public final class JarvisConfig {
         s.modLearningEnabled = COMMON.modLearningEnabled.get();
         s.dynamicSkillsEnabled = COMMON.dynamicSkillsEnabled.get();
         s.jarvisToJarvisEnabled = COMMON.jarvisToJarvis.get();
+        s.bootstrapEnabled = COMMON.bootstrapEnabled.get();
         s.debugLogging = COMMON.debugLogging.get();
         s.addressTitle = COMMON.addressTitle.get();
         s.verbosity = COMMON.verbosity.get();
@@ -142,7 +146,8 @@ public final class JarvisConfig {
         s.ffnDim = COMMON.ffnDim.get();
         s.trainingBatch = COMMON.trainingBatch.get();
         s.voiceEnabled = CLIENT.voiceEnabled.get();
-        s.speechSpeed = CLIENT.speechSpeed.get().floatValue();        s.speechPitch = CLIENT.speechPitch.get().floatValue();
+        s.speechSpeed = CLIENT.speechSpeed.get().floatValue();
+        s.speechPitch = CLIENT.speechPitch.get().floatValue();
         s.requireVoiceChat = CLIENT.requireVoiceChat.get();
         s.hudEnabled = CLIENT.hudEnabled.get();
         s.hudPosition = CLIENT.hudPosition.get();

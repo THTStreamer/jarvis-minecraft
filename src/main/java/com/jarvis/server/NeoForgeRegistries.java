@@ -18,6 +18,30 @@ import net.neoforged.fml.ModList;
 public final class NeoForgeRegistries {
     private NeoForgeRegistries() {}
 
+    /** Vanilla biome ids used when no live server registry is available. */
+    private static final List<String> VANILLA_BIOMES = List.of(
+        "minecraft:plains", "minecraft:sunflower_plains", "minecraft:desert",
+        "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest",
+        "minecraft:dark_forest", "minecraft:jungle", "minecraft:sparse_jungle",
+        "minecraft:bamboo_jungle", "minecraft:savanna", "minecraft:savanna_plateau",
+        "minecraft:windswept_savanna", "minecraft:taiga", "minecraft:snowy_taiga",
+        "minecraft:old_growth_pine_taiga", "minecraft:old_growth_spruce_taiga",
+        "minecraft:swamp", "minecraft:mangrove_swamp", "minecraft:ocean",
+        "minecraft:deep_ocean", "minecraft:warm_ocean", "minecraft:lukewarm_ocean",
+        "minecraft:deep_lukewarm_ocean", "minecraft:cold_ocean", "minecraft:deep_cold_ocean",
+        "minecraft:frozen_ocean", "minecraft:deep_frozen_ocean", "minecraft:river",
+        "minecraft:frozen_river", "minecraft:beach", "minecraft:snowy_beach",
+        "minecraft:stony_shore", "minecraft:windswept_hills", "minecraft:windswept_forest",
+        "minecraft:windswept_gravelly_hills", "minecraft:meadow", "minecraft:grove",
+        "minecraft:snowy_slopes", "minecraft:jagged_peaks", "minecraft:frozen_peaks",
+        "minecraft:stony_peaks", "minecraft:badlands", "minecraft:eroded_badlands",
+        "minecraft:wooded_badlands", "minecraft:mushroom_fields", "minecraft:dripstone_caves",
+        "minecraft:lush_caves", "minecraft:deep_dark", "minecraft:nether_wastes",
+        "minecraft:soul_sand_valley", "minecraft:crimson_forest", "minecraft:warped_forest",
+        "minecraft:basalt_deltas", "minecraft:the_end", "minecraft:end_highlands",
+        "minecraft:end_midlands", "minecraft:end_barrens", "minecraft:small_end_islands",
+        "minecraft:the_void");
+
     public static List<ModInfo> modInfos() {
         List<ModInfo> out = new ArrayList<>();
         try {
@@ -86,6 +110,34 @@ public final class NeoForgeRegistries {
             @Override
             public int entityCount(String modId) {
                 return entityIds(modId, Integer.MAX_VALUE).size();
+            }
+
+            @Override
+            public List<String> biomeIds(String modId, int limit) {
+                List<String> out = new ArrayList<>();
+                try {
+                    // datapack registries need a live server; fall back to the
+                    // vanilla list when called outside the game (e.g. tests)
+                    var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+                    if (server != null) {
+                        var reg = server.registryAccess()
+                            .registryOrThrow(net.minecraft.core.registries.Registries.BIOME);
+                        for (ResourceLocation id : reg.keySet()) {
+                            if (id.getNamespace().equals(modId)) {
+                                out.add(id.toString());
+                                if (out.size() >= limit) return out;
+                            }
+                        }
+                        return out;
+                    }
+                } catch (Exception ignored) {}
+                for (String id : VANILLA_BIOMES) {
+                    if (id.startsWith(modId + ":")) {
+                        out.add(id);
+                        if (out.size() >= limit) break;
+                    }
+                }
+                return out;
             }
 
             @Override

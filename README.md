@@ -56,7 +56,15 @@ Jarvis shows a small portrait top-left by default: **blue** while talking or
 working, **purple** while attempting to learn a new skill, **red** on failure
 or config-restricted requests. It pulses during speech/activity and rests
 static otherwise. Move it to any corner and resize it (32–128 px, never
-cropped) with `/jarvis hud`.
+cropped) with `/jarvis hud`. If the portrait ever fails to appear, run
+`/jarvis hud preview` (cycles all three faces) and check the log for the
+`Portrait HUD rendering` line.
+
+## Pre-training
+
+Every new Jarvis pre-trains on first login: ~170 curated Minecraft facts
+plus a registry sweep of installed mods, with a short neural burst so the
+weights carry Minecraft priors. Verify with `/jarvis test bootstrap`.
 
 ## Documentation
 

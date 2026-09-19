@@ -104,8 +104,11 @@ public final class JarvisService {
                     }
                 }
             }
-            // learn installed mods on first sight
-            if (wiring.settings().get().modLearningEnabled) {
+            // Minecraft pre-training (once per player) covers the curated corpus
+            // plus registry facts; the per-login learner below is skipped then.
+            runBootstrap(inst);
+            // learn installed mods on first sight (skipped once bootstrapped)
+            if (wiring.settings().get().modLearningEnabled && !inst.bootstrapped()) {
                 for (ModInfo mod : discovery.cached()) {
                     try {
                         inst.modLearner().learnMod(mod, registryView);
@@ -124,6 +127,40 @@ public final class JarvisService {
 
     public Optional<JarvisInstance> instance(UUID playerId) {
         return Optional.ofNullable(instances.get(playerId));
+    }
+
+    /**
+     * First-login pre-training: ingest the curated Minecraft corpus plus a
+     * registry sweep of installed mods into this player's private knowledge,
+     * vocabulary and training queue, then run a bounded neural burst
+     * off-thread so the network itself carries Minecraft priors. Runs once;
+     * the flag is persisted with the player data.
+     */
+    public void runBootstrap(JarvisInstance inst) {
+        if (inst.bootstrapped()) return;
+        if (!wiring.settings().get().bootstrapEnabled) return;
+        if (!wiring.settings().get().learningEnabled) return;
+        inst.setBootstrapped(true);
+        wiring.trainingPool().submit(() -> {
+            try {
+                com.jarvis.bootstrap.ModBootstrap sweep = new com.jarvis.bootstrap.ModBootstrap(
+                    inst.knowledge(), inst.semantics(), inst.training(), inst.tokenizer());
+                com.jarvis.bootstrap.ModBootstrap.Report report =
+                    sweep.run(discovery.cached(), registryView, 120);
+                for (int i = 0; i < 30; i++) {
+                    inst.training().trainAsync();
+                    try {
+                        Thread.sleep(120);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                try {
+                    persistence.save(inst);
+                } catch (Exception ignored) {}
+            } catch (Exception ignored) {}
+        });
     }
 
     public void remove(UUID playerId) {

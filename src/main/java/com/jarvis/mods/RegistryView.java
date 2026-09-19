@@ -16,6 +16,11 @@ public interface RegistryView {
     int entityCount(String modId);
     /** itemId -> human-readable tooltip lines (for tooltip observation). */
     List<String> tooltipFor(String itemId);
+    /** Biome ids for a mod namespace (vanilla + modded), capped. */
+    default List<String> biomeIds(String modId, int limit) {
+        return List.of();
+    }
+
     /** recipe summaries: "input -> output" strings involving this mod. */
     List<String> recipeSummaries(String modId, int limit);
     Map<String, String> empty();

@@ -46,6 +46,7 @@ public final class PersistenceManager {
         data.put("version", SAVE_VERSION);
         data.put("playerId", uuid);
         data.put("playerName", inst.profile().playerName());
+        data.put("bootstrapped", inst.bootstrapped());
 
         Map<String, Object> profile = new LinkedHashMap<>();
         profile.put("title", inst.profile().personality().title().name());
@@ -67,7 +68,9 @@ public final class PersistenceManager {
         data.put("skillStats", inst.skills().exportStats());
         data.put("rl", inst.rl().snapshot());
         data.put("trainSteps", inst.training().steps());
-        data.put("trainLoss", inst.training().lastLoss());
+        // Gson rejects NaN/Infinity: a fresh instance has no loss yet
+        float loss = inst.training().lastLoss();
+        data.put("trainLoss", Float.isFinite(loss) ? loss : 0f);
 
         String json = gson.toJson(data);
         Path tmp = playerFile(uuid + ".tmp");
@@ -97,6 +100,10 @@ public final class PersistenceManager {
         int version = ((Number) data.getOrDefault("version", 0)).intValue();
         if (version > SAVE_VERSION) {
             throw new IOException("Save version " + version + " is newer than supported " + SAVE_VERSION);
+        }
+        Object bootstrapped = data.get("bootstrapped");
+        if (bootstrapped != null) {
+            inst.setBootstrapped(Boolean.parseBoolean(String.valueOf(bootstrapped)));
         }
 
         Object profile = data.get("profile");

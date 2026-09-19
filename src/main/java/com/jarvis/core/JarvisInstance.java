@@ -128,7 +128,7 @@ public final class JarvisInstance {
 
     // debug
     private volatile String lastIntent = "NONE";
-    private volatile String lastSkill = "NONE";
+    private volatile boolean bootstrapped;    private volatile String lastSkill = "NONE";
     private volatile double lastConfidence;
     private volatile long lastInferenceNanos;
     private volatile long lastWorldNanos;
@@ -255,6 +255,10 @@ public final class JarvisInstance {
         this.settings = settings;
         applyPersonality(settings.get());
     }
+
+    /** True once Minecraft pre-training has been ingested for this player. */
+    public boolean bootstrapped() { return bootstrapped; }
+    public void setBootstrapped(boolean bootstrapped) { this.bootstrapped = bootstrapped; }
 
     // ---- main pipeline ----
 
